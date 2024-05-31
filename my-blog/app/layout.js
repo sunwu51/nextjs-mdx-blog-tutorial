@@ -15,7 +15,9 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css"/>
       </head>
-      <body className={inter.className + " markdown-body"}>{children}</body>
+      <body className={inter.className +'  container mx-[auto]'}>
+        <div className="markdown-body mr-40">{children}</div>
+      </body>
     </html>
   );
 }

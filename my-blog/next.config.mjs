@@ -6,9 +6,8 @@ import rehypePrismPlus from 'rehype-prism-plus';
 import toc from "@jsdevtools/rehype-toc";
 import remarkCodeTitles from "remark-flexible-code-titles";
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-
-
-
+import rehypeCodeCopyButton from './rehype-code-copy-button.mjs'
+import rehypeTocTriggerButton from './rehype-toc-trigger-button.mjs'
 const withMDX = nextMDX({
   extension: /\.mdx?$/,
   options: {
@@ -18,6 +17,8 @@ const withMDX = nextMDX({
       [rehypeAutolinkHeadings, { behavior: 'wrap' }],
       [rehypePrismPlus, { ignoreMissing: true, showLineNumbers: true  }],
       toc,
+      rehypeCodeCopyButton,
+      rehypeTocTriggerButton,
     ]
   }
 })

@@ -1,3 +1,72 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.toc {
+    position: fixed;
+    top: 20px;
+    right: 2vw;
+    width: fit-content;
+    max-width: 250px;
+    max-height: 80vh;
+    overflow: auto;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 1rem;
+    padding: 1rem 2rem;
+    font-weight: bold;
+    color:blueviolet;
+    z-index: 9;
+    min-height: 45px;
+
+}
+
+.toc li a {
+    color:blueviolet
+}
+@media (min-width: 2000px) {
+    .toc{
+      right: calc(100px + 2vw);
+    }
+}
+.toc ol.toc-level-1 {
+    margin: 0;
+    padding: 0;
+    width: 180px;
+}
+.toc .toc-trigger-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    padding: 2px 5px;
+    cursor: pointer;
+    color: black;
+    font-size: 0.75rem;
+    width: fit-content;
+    height: fit-content;
+    width: 45px;
+    box-shadow: 0px 0px 2px 0px;
+}
+
+.toc .toc-trigger-button:hover {
+    background-color: #e0e0e0;
+}
+
+.copy-code-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #f5f5f5;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    color: black;
+    font-weight: bolder;
+}
+
+.copy-code-button:hover {
+    background-color: #e0e0e0;
+}

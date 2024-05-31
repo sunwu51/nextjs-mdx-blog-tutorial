@@ -195,3 +195,187 @@ import "./prism-dracula.css";
 
 ![image](https://i.imgur.com/8kYdtWA.png)
 
+# 4 Custom plugins
+Now, we want to add a custom button to trigger the toc show or hide. Also a button for the code block to copy code.
+
+Create file named `rehype-toc-trigger-button.mjs` in the root path, with the following content. This file will generate a button dom in the toc `nav`, and click the button will trigger the toc show/hide.
+```js :rehype-toc-trigger-button.mjs
+import { visit } from 'unist-util-visit';
+import { h } from 'hastscript';
+import crypto from "crypto";
+
+export default function rehypeTocTriggerButton() {
+  return (tree) => {
+    visit(tree, 'element', (node) => {
+      if (node.tagName === 'nav' && node.properties.className == 'toc') {     
+        const btnid = crypto.randomUUID();
+        const button = h('button', {
+          type: 'button',
+          className: 'toc-trigger-button',
+          id: btnid,
+        }, '≡');
+        node.children.push(button);
+        const scriptContent = `
+            document.getElementById("${btnid}").addEventListener('click', (e) => {
+              var btn = e.target;
+              var nav = btn.closest('nav');
+              var content = nav.querySelector('.toc-level-1');
+              content.style.display = content.style.display === 'none' ? '' : 'none';
+            });`;
+        const src = "data:application/javascript;base64," + Buffer.from(scriptContent).toString('base64');
+        const script = h('script', {src: src});
+        node.children.push(script);
+      }
+    });
+  }
+}
+```
+
+Then add another file named `rehype-code-copy-button.mjs`, this plugin will generate a copy button in the `code` block.
+```js :rehype-code-copy-button.mjs
+import { visit } from 'unist-util-visit';
+import { h } from 'hastscript';
+import crypto from "crypto";
+
+export default function rehypeCodeCopyButton() {
+  return (tree) => {
+    visit(tree, 'element', (node) => {
+      if (node.tagName === 'pre') {        
+        const codeElement = node.children.find(child => child.tagName === 'code');
+        if (codeElement) {
+          const btnid = crypto.randomUUID();
+          const button = h('button', {
+            type: 'button',
+            className: 'copy-code-button',
+            id: btnid,
+            'data-copy-code-button': true
+          }, 'Copy');
+          
+          node.children.push(button);
+          const scriptContent = `
+            document.getElementById("${btnid}").addEventListener('click', (e) => {
+              var btn = e.target;
+              var codeBlock = btn.closest('pre').querySelector('code').innerText;
+              navigator.clipboard.writeText(code).then(() => {
+                btn.innerText = 'Copied!';
+                setTimeout(() => { btn.innerText = 'Copy'; }, 2000);
+              }).catch(err => {
+                console.error('Failed to copy code:', err);
+              });
+            });`;
+          const src = "data:application/javascript;base64," + Buffer.from(scriptContent).toString('base64');
+          const script = h('script', {src: src});
+          node.children.push(script);
+        }
+      }
+    });
+  }
+}
+```
+Then add these plugins to the `next.config.mjs`
+```js :next.config.mjs {9,10,20,21}
+/** @type {import('next').NextConfig} */
+import nextMDX from '@next/mdx'
+import remarkGfm from 'remark-gfm';
+import rehypeSlug from 'rehype-slug';
+import rehypePrismPlus from 'rehype-prism-plus';
+import toc from "@jsdevtools/rehype-toc";
+import remarkCodeTitles from "remark-flexible-code-titles";
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import rehypeCodeCopyButton from './rehype-code-copy-button.mjs'
+import rehypeTocTriggerButton from './rehype-toc-trigger-button.mjs'
+const withMDX = nextMDX({
+  extension: /\.mdx?$/,
+  options: {
+    remarkPlugins: [remarkGfm, remarkCodeTitles],
+    rehypePlugins: [
+      rehypeSlug,
+      [rehypeAutolinkHeadings, { behavior: 'wrap' }],
+      [rehypePrismPlus, { ignoreMissing: true, showLineNumbers: true  }],
+      toc,
+      rehypeCodeCopyButton,
+      rehypeTocTriggerButton,
+    ]
+  }
+})
+
+const nextConfig = {
+  // Configure `pageExtensions` to include MDX files
+  pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
+  // Optionally, add any other Next.js config below
+}
+ 
+export default withMDX(nextConfig)
+```
+Finally, add custom styles
+```css
+.toc {
+    position: fixed;
+    top: 20px;
+    right: 2vw;
+    width: fit-content;
+    max-width: 250px;
+    max-height: 80vh;
+    overflow: auto;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 1rem;
+    padding: 1rem 2rem;
+    font-weight: bold;
+    color:blueviolet;
+    z-index: 9;
+    min-height: 45px;
+
+}
+
+.toc li a {
+    color:blueviolet
+}
+@media (min-width: 2000px) {
+    .toc{
+      right: calc(100px + 2vw);
+    }
+}
+.toc ol.toc-level-1 {
+    margin: 0;
+    padding: 0;
+    width: 180px;
+}
+.toc .toc-trigger-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    padding: 2px 5px;
+    cursor: pointer;
+    color: black;
+    font-size: 0.75rem;
+    width: fit-content;
+    height: fit-content;
+    width: 45px;
+    box-shadow: 0px 0px 2px 0px;
+}
+
+.toc .toc-trigger-button:hover {
+    background-color: #e0e0e0;
+}
+
+.copy-code-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #f5f5f5;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    color: black;
+    font-weight: bolder;
+}
+
+.copy-code-button:hover {
+    background-color: #e0e0e0;
+}
+```
+![img](https://i.imgur.com/NdTh1YU.png)
