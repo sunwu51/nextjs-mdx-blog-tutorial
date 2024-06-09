@@ -379,3 +379,92 @@ Finally, add custom styles
 }
 ```
 ![img](https://i.imgur.com/NdTh1YU.png)
+# 5 Slug and Custom Components
+The directory structure is not simple enough, you need to create a directory with the post name, then in the directory, create the `page.mdx` file. That is not dynamic.
+
+Well, we can use the `slug` feature to create a dynamic route. Here, we create `app/blog/[slug]/page.js` instead of `app/blog/page.mdx`.
+```js :page.js
+import dynamic from "next/dynamic";
+
+export default function App({params}) {
+    // just import mdx file, will get a JSX component
+    let MDX = dynamic(() => import('@/posts/' + params.slug + '.mdx'));
+    return <>
+        <h1>Some Common Content</h1>
+        <MDX />
+    </>
+}
+
+// prebuild static params
+export function generateStaticParams() {
+    const slugs =['test', 'test1', 'test2'];
+    return slugs.map(slug => ({slug}))
+}
+```
+
+Then create a `posts` directory in root directory, write some `mdx` content here.
+
+![image](https://i.imgur.com/s0TMZeO.png)
+
+![image](https://i.imgur.com/aCoaa8f.png)
+
+Something not good for this way is `@next/mdx` not support [frontmatter](https://mdxjs.com/guides/frontmatter/). You can config `remarkFrontmatter` plugin to ignore the frontmatter.  
+```js
+// next.config.mjs
+import remarkFrontmatter from 'remark-frontmatter';
+
+....
+    remarkPlugins: [remarkGfm, remarkCodeTitles, remarkFrontmatter],
+....
+```
+
+Then you need to add lib `gray-matter` to read the file content to get the frontmatter.
+```jsx :page.js
+import dynamic from "next/dynamic";
+import matter from 'gray-matter';
+import fs from 'fs';
+import path from "path";
+
+export default function App({params}) {
+    const  MDX = dynamic(() => import('@/posts/' + params.slug + '.mdx'));
+
+    // gray-matter parse fileContent to get the frontmatter
+    const fileContent = fs.readFileSync(
+        path.join(process.cwd(), 'posts', params.slug + '.mdx'), 'utf8');
+    const {data: frontmatter} = matter(fileContent);
+
+    return <>
+        <h1>{frontmatter.title}</h1>
+        <MDX />
+    </>
+}
+
+export function generateStaticParams() {
+    const slugs =['test', 'test1', 'test2'];
+    return slugs.map(slug => ({slug}))
+}
+```
+
+The last topic is how to add custom component to `mdx`, only things that you need to do is add any component to the `mdx-components.jsx` file that created at step 2.
+
+```bash
+$ npm i antd
+```
+
+```jsx
+import { Button } from 'antd';
+
+const CustomH1 = (props) => <h1 style={{ backgroundColor: 'tomato'}} {...props} />;
+const CustomLink = (props) => <a style={{ color: 'white'}} {...props} />;
+
+
+export function useMDXComponents(components) {
+  return {
+    ...components, 
+    h1: CustomH1, a: CustomLink, // replace default h1 and a tags with the custom components
+    Button: Button,              // add Button tag that use the antd Button component
+  }
+}
+```
+
+![image](https://i.imgur.com/q2qShZE.png)

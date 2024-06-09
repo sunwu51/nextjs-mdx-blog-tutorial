@@ -5,13 +5,14 @@ import rehypeSlug from 'rehype-slug';
 import rehypePrismPlus from 'rehype-prism-plus';
 import toc from "@jsdevtools/rehype-toc";
 import remarkCodeTitles from "remark-flexible-code-titles";
+import remarkFrontmatter from 'remark-frontmatter';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeCodeCopyButton from './rehype-code-copy-button.mjs'
 import rehypeTocTriggerButton from './rehype-toc-trigger-button.mjs'
 const withMDX = nextMDX({
   extension: /\.mdx?$/,
   options: {
-    remarkPlugins: [remarkGfm, remarkCodeTitles],
+    remarkPlugins: [remarkGfm, remarkCodeTitles, remarkFrontmatter],
     rehypePlugins: [
       rehypeSlug,
       [rehypeAutolinkHeadings, { behavior: 'wrap' }],
